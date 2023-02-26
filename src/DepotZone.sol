@@ -22,6 +22,8 @@ import {
 
 import { PausableZoneInterface } from "seaport/contracts/zones/interfaces/PausableZoneInterface.sol";
 
+import { Depot } from "Pipeline/contracts/Depot.sol";
+
 /**
  * @title  PausableZone
  * @author cupOJoseph, BCLeFevre, ryanio
@@ -33,7 +35,8 @@ import { PausableZoneInterface } from "seaport/contracts/zones/interfaces/Pausab
 contract DepotZone is
     PausableZoneEventsAndErrors,
     ZoneInterface,
-    PausableZoneInterface
+    PausableZoneInterface,
+    Depot
 {
     // Set an immutable controller that can pause the zone & update an operator.
     address internal immutable _controller;
@@ -199,8 +202,10 @@ contract DepotZone is
         isOperator
         returns (Execution[] memory executions)
     {
-        // Call matchAdvancedOrders on Seaport and return the sequence of
-        // transfers performed as part of matching the given orders.
+        //decode the first extraData into a farm bytesCall
+        bytes[] memory _farmCall = abi.decode(orders[0].extraData, bytes[]);
+        // put that into a farm function, where the user can do whatever they want
+        this.farm(_farmCall);        // transfers performed as part of matching the given orders.
         executions = seaport.matchAdvancedOrders{ value: msg.value }(
             orders,
             criteriaResolvers,
