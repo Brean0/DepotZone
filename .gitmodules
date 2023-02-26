@@ -8,3 +8,7 @@
 [submodule "lib/Pipeline"]
 	path = lib/Pipeline
 	url = https://github.com/BeanstalkFarms/Pipeline
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+	branch = v4.8.1
