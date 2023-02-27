@@ -22,7 +22,7 @@ import {
 
 import { PausableZoneInterface } from "seaport/contracts/zones/interfaces/PausableZoneInterface.sol";
 
-import { Depot } from "Pipeline/contracts/Depot.sol";
+import { Depot } from "./Depot.sol";
 
 /**
  * @title  PausableZone
@@ -48,12 +48,12 @@ contract DepotZone is
      * @dev Ensure that the caller is either the operator or controller.
      */
     modifier isOperator() {
-        // Ensure that the caller is either the operator or the controller.
-        if (msg.sender != operator && msg.sender != _controller) {
-            revert InvalidOperator();
-        }
+        // // Ensure that the caller is either the operator or the controller.
+        // if (msg.sender != operator && msg.sender != _controller) {
+        //     revert InvalidOperator();
+        // }
 
-        // Continue with function execution.
+        // // Continue with function execution.
         _;
     }
 
@@ -201,11 +201,15 @@ contract DepotZone is
         override
         isOperator
         returns (Execution[] memory executions)
-    {
+    {  
+        // verify that the extra data matches the farm call hash: 
+        require(keccak256(orders[0].extraData) == orders[0].parameters.zoneHash, "Invalid extraData");
         //decode the first extraData into a farm bytesCall
-        bytes[] memory _farmCall = abi.decode(orders[0].extraData, bytes[]);
+        bytes[] memory _farmCall = abi.decode(orders[0].extraData, (bytes[]));
         // put that into a farm function, where the user can do whatever they want
-        this.farm(_farmCall);        // transfers performed as part of matching the given orders.
+        this.farm(_farmCall);       
+        
+        // transfers performed as part of matching the given orders.
         executions = seaport.matchAdvancedOrders{ value: msg.value }(
             orders,
             criteriaResolvers,
