@@ -27,7 +27,7 @@ contract seaZone is Test {
 
     function setUp() public {
         initUsers();
-        deal(BEAN, user, 1e6);
+        deal(BEAN, user, 10e6);
         depotZone = new DepotZone();
         earnedBeanOracle = new EarnedBeanOracle();
         console.log("Address of depotZone:", address(depotZone));
@@ -37,11 +37,12 @@ contract seaZone is Test {
     function testSeaport() public {
         OrderParameters memory order = setUpOrder();
         executeOrder(order);
+        // executeOrder(order);
     }
 
     function setUpOrder() prank(user) public returns (OrderParameters memory) {
         vm.pauseGasMetering();
-        IERC20(BEAN).approve(address(seaport), 1e6);
+        IERC20(BEAN).approve(address(seaport), 2e6);
         OfferItem[] memory offerItem = new OfferItem[](1);
         offerItem[0] = OfferItem(
             ItemType.ERC20, // item offered is an ERC20 token

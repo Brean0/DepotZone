@@ -38,48 +38,10 @@ contract DepotZone is
     PausableZoneInterface,
     Depot
 {
-    // Set an immutable controller that can pause the zone & update an operator.
-    address internal immutable _controller;
 
-    // Set an operator that can instruct the zone to cancel or execute orders.
-    address public operator;
 
-    /**
-     * @dev Ensure that the caller is either the operator or controller.
-     */
-    modifier isOperator() {
-        // // Ensure that the caller is either the operator or the controller.
-        // if (msg.sender != operator && msg.sender != _controller) {
-        //     revert InvalidOperator();
-        // }
 
-        // // Continue with function execution.
-        _;
-    }
 
-    /**
-     * @dev Ensure that the caller is the controller.
-     */
-    modifier isController() {
-        // Ensure that the caller is the controller.
-        if (msg.sender != _controller) {
-            revert InvalidController();
-        }
-
-        // Continue with function execution.
-        _;
-    }
-
-    /**
-     * @notice Set the deployer as the controller of the zone.
-     */
-    constructor() {
-        // Set the controller to the deployer.
-        _controller = msg.sender;
-
-        // Emit an event signifying that the zone is unpaused.
-        emit Unpaused();
-    }
 
     /**
      * @notice Cancel an arbitrary number of orders that have agreed to use the
@@ -94,7 +56,7 @@ contract DepotZone is
     function cancelOrders(
         SeaportInterface seaport,
         OrderComponents[] calldata orders
-    ) external override isOperator returns (bool cancelled) {
+    ) external override returns (bool cancelled) {
         // Call cancel on Seaport and return its boolean value.
         cancelled = seaport.cancel(orders);
     }
@@ -105,13 +67,7 @@ contract DepotZone is
      *         zone will not be fulfillable unless the zone is redeployed to the
      *         same address.
      */
-    function pause(address payee) external override isController {
-        // Emit an event signifying that the zone is paused.
-        emit Paused();
-
-        // Destroy the zone, sending any native tokens to the transaction
-        // submitter.
-        selfdestruct(payable(payee));
+    function pause(address payee) external {
     }
 
     /**
@@ -121,17 +77,7 @@ contract DepotZone is
      */
     function assignOperator(
         address operatorToAssign
-    ) external override isController {
-        // Ensure the operator being assigned is not the null address.
-        if (operatorToAssign == address(0)) {
-            revert PauserCanNotBeSetAsZero();
-        }
-
-        // Set the given address as the new operator.
-        operator = operatorToAssign;
-
-        // Emit an event indicating the operator has been updated.
-        emit OperatorUpdated(operatorToAssign);
+    ) external override {
     }
 
     /**
@@ -158,7 +104,6 @@ contract DepotZone is
         external
         payable
         override
-        isOperator
         returns (Execution[] memory executions)
     {
         // Call matchOrders on Seaport and return the sequence of transfers
@@ -199,7 +144,6 @@ contract DepotZone is
         external
         payable
         override
-        isOperator
         returns (Execution[] memory executions)
     {  
         // verify that the extra data matches the farm call hash: 
@@ -237,8 +181,12 @@ contract DepotZone is
         /**
          * @custom:name zoneParameters
          */
-        ZoneParameters calldata
+        ZoneParameters calldata zoneData
     ) external pure override returns (bytes4 validOrderMagicValue) {
+        require(
+            keccak256(zoneData.extraData) == zoneData.zoneHash, 
+            "Invalid extraData"
+        );
         // Return the selector of isValidOrder as the magic value.
         validOrderMagicValue = ZoneInterface.validateOrder.selector;
     }
